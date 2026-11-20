@@ -3,144 +3,327 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>歌詞互動展示</title>
+  <title>歌詞答案之書</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&family=Noto+Serif+TC:wght@400;600&display=swap"
+    rel="stylesheet"
+  />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-paper: #fbf8f3;
+      --bg-card: rgba(255, 253, 249, 0.78);
+      --ink-main: #3b302b;
+      --ink-soft: #85756c;
+      --accent: #b88b68;
+      --accent-hover: #a27452;
+      --border-soft: rgba(184, 139, 104, 0.22);
+      --shadow-soft: 0 20px 50px rgba(74, 54, 41, 0.07);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
-      justify-content: center;
       align-items: center;
-      background-color: #111;
-      font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
-      color: #fff;
-    }
-    /* 依據背景圖片比例自適應調整外框形狀 */
-    .lyric-stage {
-      position: relative;
-      width: min(92vw, 480px);
-      aspect-ratio: 9 / 16; /* 可依實際圖片長寬比微調 */
-      background-image: url("https://raw.githubusercontent.com/nataliesiusiu/Lyrics/b709c062288000e2bbe8fcebc8a78f9f54f12a36/Background.png");
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      display: flex;
-      flex-direction: column;
       justify-content: center;
-      align-items: center;
-      padding: 12% 10%;
-      text-align: center;
-      overflow: hidden;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 20% 15%, rgba(235, 207, 178, 0.35), transparent 48%),
+        radial-gradient(circle at 82% 85%, rgba(218, 194, 175, 0.28), transparent 52%),
+        var(--bg-paper);
+      color: var(--ink-main);
+      font-family: "Noto Sans TC", -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
-    .lyric-container {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+
+    .book-shell {
       width: 100%;
+      max-width: 540px;
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-soft);
+      border-radius: 28px;
+      padding: 48px 32px 40px;
+      box-shadow: var(--shadow-soft);
+      text-align: center;
     }
-    .lyric-line {
+
+    .eyebrow {
+      font-size: 0.78rem;
+      letter-spacing: 0.22em;
+      color: var(--accent);
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+
+    .ritual-prompt {
+      font-size: 0.94rem;
+      line-height: 1.8;
+      color: var(--ink-soft);
+      max-width: 36ch;
+      margin: 0 auto 36px;
+      font-weight: 300;
+    }
+
+    /* 改進 2：歌詞彈出區域加入背景圖與柔光遮罩，提升文字對比度 */
+    .stage {
+      position: relative;
+      overflow: hidden;
+      min-height: 195px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 18px;
+      margin-bottom: 28px;
+      border-radius: 18px;
+      border: 1px solid var(--border-soft);
+      background-image:
+        linear-gradient(
+          rgba(251, 248, 243, 0.72),
+          rgba(251, 248, 243, 0.78)
+        ),
+        url("https://raw.githubusercontent.com/nataliesiusiu/Lyrics/b709c062288000e2bbe8fcebc8a78f9f54f12a36/Background.png");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .stage > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .lyric-text {
+      font-family: "Noto Serif TC", Georgia, serif;
+      font-size: clamp(1.45rem, 4.5vw, 1.95rem);
+      line-height: 1.65;
+      letter-spacing: 0.06em;
+      color: var(--ink-main);
+      text-shadow: 0 1px 10px rgba(255, 253, 249, 0.85);
       opacity: 0;
-      transform: translateY(12px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
-      font-size: clamp(1rem, 3.8vw, 1.35rem);
-      letter-spacing: 0.12em;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
+      transform: translateY(10px);
+      transition: opacity 0.75s ease, transform 0.75s ease;
     }
-    .lyric-line.show {
+
+    .lyric-text.is-visible {
       opacity: 1;
       transform: translateY(0);
     }
-    /* 結尾投票提示與二維碼區塊 */
-    .cta-box {
+
+    .lyric-meta {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      color: var(--ink-soft);
       opacity: 0;
-      transform: scale(0.92);
-      transition: opacity 0.8s ease, transform 0.8s ease;
-      margin-top: 18px;
+      transition: opacity 0.9s ease 0.15s;
+      min-height: 1.2em;
+    }
+
+    .lyric-meta.is-visible {
+      opacity: 1;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      font-size: 0.92rem;
+      letter-spacing: 0.08em;
+      border-radius: 999px;
+      transition: all 0.25s ease;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fffdfa;
+      padding: 13px 28px;
+      box-shadow: 0 8px 20px rgba(184, 139, 104, 0.25);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    /* 改進 1：取代原本「複製這句」位置的投票引導與二維碼區塊 */
+    .vote-card {
+      margin-top: 24px;
+      padding-top: 22px;
+      border-top: 1px dashed var(--border-soft);
       display: none;
       flex-direction: column;
       align-items: center;
       gap: 12px;
-      background: rgba(0, 0, 0, 0.55);
-      padding: 16px 20px;
-      border-radius: 16px;
-      backdrop-filter: blur(4px);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
     }
-    .cta-box.show {
+
+    .vote-card.is-active {
       display: flex;
+    }
+
+    .vote-card.is-visible {
       opacity: 1;
-      transform: scale(1);
+      transform: translateY(0);
     }
-    .cta-text {
-      font-size: 1.05rem;
-      font-weight: bold;
-      letter-spacing: 0.08em;
-      color: #ffe9a8;
+
+    .vote-prompt {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      letter-spacing: 0.05em;
+      color: var(--ink-main);
     }
-    .qr-img {
-      width: 130px;
-      height: 130px;
+
+    .qr-frame {
+      width: 132px;
+      height: 132px;
+      padding: 8px;
+      background: #fffdfa;
+      border: 1px solid var(--border-soft);
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(74, 54, 41, 0.06);
+    }
+
+    .qr-frame img {
+      display: block;
+      width: 100%;
+      height: 100%;
       object-fit: contain;
-      border-radius: 8px;
-      background: #fff;
-      padding: 6px;
+      border-radius: 10px;
+    }
+
+    @media (max-width: 480px) {
+      .book-shell {
+        padding: 38px 22px 32px;
+        border-radius: 22px;
+      }
+
+      .stage {
+        min-height: 175px;
+      }
+
+      .qr-frame {
+        width: 118px;
+        height: 118px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="lyric-stage" id="stage">
-    <div class="lyric-container" id="lyricContainer"></div>
+  <main class="book-shell">
+    <div class="eyebrow">BOOK OF LYRICS</div>
+    <p class="ritual-prompt">
+      在心裡默念你的問題，深呼吸一下，<br />
+      讓旋律替你翻開這一頁。
+    </p>
 
-    <div class="cta-box" id="ctaBox">
-      <div class="cta-text">喜歡這首歌的歌詞嗎？快去投票支持！</div>
-      <img
-        class="qr-img"
-        src="https://raw.githubusercontent.com/nataliesiusiu/Lyrics/main/QR%20code.png"
-        alt="投票支持二維碼"
-      />
+    <section class="stage" aria-live="polite">
+      <div id="lyricText" class="lyric-text">輕輕按一下，聽聽歌裡怎麼說</div>
+      <div id="lyricMeta" class="lyric-meta"></div>
+    </section>
+
+    <div class="actions">
+      <button id="drawBtn" class="btn-primary" type="button">翻開歌詞</button>
     </div>
-  </div>
+
+    <div id="voteCard" class="vote-card" aria-live="polite">
+      <p class="vote-prompt">喜歡這首歌的歌詞嗎？快去投票支持！</p>
+      <div class="qr-frame">
+        <img
+          src="https://raw.githubusercontent.com/nataliesiusiu/Lyrics/main/QR%20code.jpg"
+          alt="投票連結二維碼"
+        />
+      </div>
+    </div>
+  </main>
 
   <script>
-    // 請在此陣列中自行填入授權歌詞段落（以下為範例片段）
-    const lyrics = [
-      "靈魂相通",
-      "剎那失蹤",
-      "前生早約定",
-      "重逢至愛 不枉這生"
+    // 在這裡加入或修改你的歌詞清單
+    // song 與 artist 可填可不填；若留空，畫面會自動只顯示歌詞
+    const LYRICS = [
+      { text: "天會安排", song: "", artist: "" },
+      { text: "神奇一天", song: "", artist: "" },
+      { text: "登天台階 竟這樣近", song: "", artist: "" },
+      { text: "展開了新篇", song: "", artist: "" },
+      { text: "靈魂相通", song: "", artist: "" },
+      { text: "剎那失蹤", song: "", artist: "" },
+      { text: "前生早約定", song: "", artist: "" },
+      { text: "一秒失控", song: "", artist: "" },
+      { text: "忘年隔世", song: "", artist: "" },
+      { text: "萬年前遇見", song: "", artist: "" },
+      { text: "突然現身身邊", song: "", artist: "" },
+      { text: "去遍五大洋", song: "", artist: "" },
+      { text: "撈回的針", song: "", artist: "" },
+      { text: "命運就在眼前", song: "", artist: "" },
+      { text: "重逢至愛", song: "", artist: "" },
+      { text: "不枉這生", song: "", artist: "" },
+      { text: "別說話", song: "", artist: "" },
     ];
 
-    const container = document.getElementById("lyricContainer");
-    const ctaBox = document.getElementById("ctaBox");
-    const stage = document.getElementById("stage");
+    const lyricTextEl = document.getElementById("lyricText");
+    const lyricMetaEl = document.getElementById("lyricMeta");
+    const drawBtn = document.getElementById("drawBtn");
+    const voteCardEl = document.getElementById("voteCard");
 
-    // 依據背景圖實際長寬比動態調整歌詞框比例
-    const bgImg = new Image();
-    bgImg.src = "https://raw.githubusercontent.com/nataliesiusiu/Lyrics/b709c062288000e2bbe8fcebc8a78f9f54f12a36/Background.png";
-    bgImg.onload = () => {
-      if (bgImg.naturalWidth && bgImg.naturalHeight) {
-        stage.style.aspectRatio = `${bgImg.naturalWidth} / ${bgImg.naturalHeight}`;
+    let lastIndex = -1;
+
+    function pickRandomIndex() {
+      if (LYRICS.length === 1) return 0;
+      let idx = Math.floor(Math.random() * LYRICS.length);
+      while (idx === lastIndex) {
+        idx = Math.floor(Math.random() * LYRICS.length);
       }
-      playSequence();
-    };
-
-    function playSequence() {
-      lyrics.forEach((line, index) => {
-        const p = document.createElement("div");
-        p.className = "lyric-line";
-        p.textContent = line;
-        container.appendChild(p);
-
-        setTimeout(() => {
-          p.classList.add("show");
-        }, index * 900);
-      });
-
-      // 所有詞句彈出後，顯示投票提示與二維碼
-      setTimeout(() => {
-        ctaBox.style.display = "flex";
-        requestAnimationFrame(() => ctaBox.classList.add("show"));
-      }, lyrics.length * 900 + 600);
+      lastIndex = idx;
+      return idx;
     }
+
+    function revealVoteCard() {
+      voteCardEl.classList.add("is-active");
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          voteCardEl.classList.add("is-visible");
+        });
+      });
+    }
+
+    function drawLyric() {
+      const item = LYRICS[pickRandomIndex()];
+
+      lyricTextEl.classList.remove("is-visible");
+      lyricMetaEl.classList.remove("is-visible");
+
+      setTimeout(() => {
+        lyricTextEl.textContent = `「${item.text}」`;
+
+        const parts = [item.song, item.artist].filter(Boolean);
+        lyricMetaEl.textContent = parts.length ? `— ${parts.join(" · ")}` : "";
+
+        lyricTextEl.classList.add("is-visible");
+        lyricMetaEl.classList.add("is-visible");
+
+        drawBtn.textContent = "再翻一頁";
+        revealVoteCard();
+      }, 180);
+    }
+
+    drawBtn.addEventListener("click", drawLyric);
   </script>
 </body>
 </html>
