@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>歌詞互動展示</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #111;
+      font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+      color: #fff;
+    }
+    /* 依據背景圖片比例自適應調整外框形狀 */
+    .lyric-stage {
+      position: relative;
+      width: min(92vw, 480px);
+      aspect-ratio: 9 / 16; /* 可依實際圖片長寬比微調 */
+      background-image: url("https://raw.githubusercontent.com/nataliesiusiu/Lyrics/b709c062288000e2bbe8fcebc8a78f9f54f12a36/Background.png");
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 12% 10%;
+      text-align: center;
+      overflow: hidden;
+    }
+    .lyric-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+    .lyric-line {
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      font-size: clamp(1rem, 3.8vw, 1.35rem);
+      letter-spacing: 0.12em;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.75);
+    }
+    .lyric-line.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    /* 結尾投票提示與二維碼區塊 */
+    .cta-box {
+      opacity: 0;
+      transform: scale(0.92);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+      margin-top: 18px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.55);
+      padding: 16px 20px;
+      border-radius: 16px;
+      backdrop-filter: blur(4px);
+    }
+    .cta-box.show {
+      display: flex;
+      opacity: 1;
+      transform: scale(1);
+    }
+    .cta-text {
+      font-size: 1.05rem;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      color: #ffe9a8;
+    }
+    .qr-img {
+      width: 130px;
+      height: 130px;
+      object-fit: contain;
+      border-radius: 8px;
+      background: #fff;
+      padding: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="lyric-stage" id="stage">
+    <div class="lyric-container" id="lyricContainer"></div>
+
+    <div class="cta-box" id="ctaBox">
+      <div class="cta-text">喜歡這首歌的歌詞嗎？快去投票支持！</div>
+      <img
+        class="qr-img"
+        src="https://raw.githubusercontent.com/nataliesiusiu/Lyrics/main/QR%20code.png"
+        alt="投票支持二維碼"
+      />
+    </div>
+  </div>
+
+  <script>
+    // 請在此陣列中自行填入授權歌詞段落（以下為範例片段）
+    const lyrics = [
+      "靈魂相通",
+      "剎那失蹤",
+      "前生早約定",
+      "重逢至愛 不枉這生"
+    ];
+
+    const container = document.getElementById("lyricContainer");
+    const ctaBox = document.getElementById("ctaBox");
+    const stage = document.getElementById("stage");
+
+    // 依據背景圖實際長寬比動態調整歌詞框比例
+    const bgImg = new Image();
+    bgImg.src = "https://raw.githubusercontent.com/nataliesiusiu/Lyrics/b709c062288000e2bbe8fcebc8a78f9f54f12a36/Background.png";
+    bgImg.onload = () => {
+      if (bgImg.naturalWidth && bgImg.naturalHeight) {
+        stage.style.aspectRatio = `${bgImg.naturalWidth} / ${bgImg.naturalHeight}`;
+      }
+      playSequence();
+    };
+
+    function playSequence() {
+      lyrics.forEach((line, index) => {
+        const p = document.createElement("div");
+        p.className = "lyric-line";
+        p.textContent = line;
+        container.appendChild(p);
+
+        setTimeout(() => {
+          p.classList.add("show");
+        }, index * 900);
+      });
+
+      // 所有詞句彈出後，顯示投票提示與二維碼
+      setTimeout(() => {
+        ctaBox.style.display = "flex";
+        requestAnimationFrame(() => ctaBox.classList.add("show"));
+      }, lyrics.length * 900 + 600);
+    }
+  </script>
+</body>
+</html>
